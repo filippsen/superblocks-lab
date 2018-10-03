@@ -31,6 +31,7 @@ import ContractInteraction from './contractinteraction.js';
 import TransactionLog from '../blockexplorer/transactionlog.js';
 import Welcome from './welcome';
 import { IconClose } from '../icons';
+import ContractTester from './contracttester.js';
 
 export class WindowComponent extends Component {
     constructor(props) {
@@ -171,6 +172,11 @@ export class Window {
                 <Welcome
                     router={this.props.router}
                 />
+            );
+        }
+        else if(this.props.item.props.type=="contract" && this.props.item.props.type2=="test") {
+            return (
+                <ContractTester id={this.subId} parent={this} contract={this.props.item.props._contract} project={this.props.item.props._project} router={this.props.router} functions={this.props.functions} />
             );
         }
     };

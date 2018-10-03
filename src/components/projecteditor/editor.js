@@ -17,7 +17,7 @@
 import { h, Component } from 'preact';
 import style from './style-editor';
 import MonacoEditor from 'react-monaco-editor';
-import { IconSave, IconCompile, IconDeploy, IconConfigure, IconInteract } from '../icons';
+import { IconSave, IconCompile, IconDeploy, IconConfigure, IconInteract, IconTest } from '../icons';
 
 export default class Editor extends Component {
     constructor(props) {
@@ -142,6 +142,15 @@ contract `+this.props.contract.name+` {
         if(subitem) this.props.router.panes.openItem(subitem, this.props.parent.props.parent.props.id);
     };
 
+    test = (e) => {
+        e.preventDefault();
+        const subitem = this.props.item.getChildren().filter((elm) => {
+            return (elm.props.type2=="test");
+
+        })[0];
+        if(subitem) this.props.router.panes.openItem(subitem, this.props.parent.props.parent.props.id);
+    };
+
     textChange = (value) => {
         this.body.contents=value;
         if(this.body.state!=1) {
@@ -183,6 +192,7 @@ contract `+this.props.contract.name+` {
                     {this.props.type2=="contract" && <button class="btnNoBg" title="Deploy" onClick={this.deploy}><IconDeploy style={{ verticalAlign:'middle'}} /></button>}
                     {this.props.type2=="contract" && <button class="btnNoBg" title="Configure" onClick={this.configure}><IconConfigure /></button>}
                     {this.props.type2=="contract" && <button class="btnNoBg" title="Interact" onClick={this.interact}><IconInteract style={{ verticalAlign:'middle'}}/></button>}
+                    {this.props.type2=="contract" && <button class="btnNoBg" title="Test" onClick={this.test}><IconTest /></button>}
                 </div>
                 <div class={style.info}>
                     <span>

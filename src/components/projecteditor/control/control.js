@@ -50,6 +50,7 @@ import {
     IconMd,
     IconShowPreview,
     IconMosaic,
+    IconTest,
 } from '../../icons';
 
 
@@ -267,11 +268,13 @@ export default class Control extends Component {
                 var contractInteract=this._newItem({title: "Interact", _parentItem: contractChild, _contract: contract.name, _project: projectItem, type: "contract", type2: "interact", onClick: this._openItem, icon: <IconInteract /> , state: {_tag: 2}});
                 var contractCompile=this._newItem({title: "Compile", _contract: contract.name, _project: projectItem, type: "contract", type2: "compile", onClick: this._openItem, icon: <IconCompile />, state: {_tag: 3}});
                 var contractDeploy=this._newItem({title: "Deploy", _parentItem: contractChild, _contract: contract.name, _project: projectItem, type: "contract", type2: "deploy", onClick: this._openItem, icon: <IconDeploy />, state: {_tag: 4}});
+                var contractTest=this._newItem({title: "Test", _parentItem: contractChild, _contract: contract.name, _project: projectItem, type: "contract", type2: "test", onClick: this._openItem, icon: <IconTest />, state: {_tag: 5}});
 
                 contractChildChildren.push(contractConfig);
                 contractChildChildren.push(contractCompile);
                 contractChildChildren.push(contractDeploy);
                 contractChildChildren.push(contractInteract);
+                contractChildChildren.push(contractTest);
                 children.push(contractChild);
             }
             // Add invisible items
