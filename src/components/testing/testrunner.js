@@ -17,7 +17,14 @@
 
 import { CustomReporter } from "../testing/reporter";
 
-/*=====================
+
+var testRunnerStatus="";
+export function readTestRunnerStatus() {
+    return testRunnerStatus;
+}
+
+
+/*====================
   TestRunner
 
   Controls tests: initialize, start, stop, ...
@@ -98,12 +105,74 @@ export default class TestRunner {
         var Tx = require('../../ethereumjs-tx-1.3.3.min.js');
         var ContractTesterLib = require("../projecteditor/contracttester-lib").default;
         const utilityLibrary = new ContractTesterLib();
+
         describe("Contract name: " + contract_name, function() {
-            eval(testCode);
+            testRunnerStatus="";
+            try {
+                eval(testCode);
+            } catch(e) {
+                testRunnerStatus="Invalid test file. " + e;
+                console.error("testrunner error: ", e);
+                componentReference.redraw(); // TODO: FIXME: debug force refresh here
+                return;
+            }
         });
 
         // Invoke Mocha
         mocha.checkLeaks();
+        //mocha.allowUncaught();
+        mocha.fullTrace();
+        const runner = mocha.run(function() {
+            console.log("Tests are done!");
+            componentReference.redraw(); // TODO: FIXME: debug force refresh here
+        });
+
+        return;
+    };
+
+    runSingle(title, testCode, web3, componentReference, action_before, action_test, action_after) {
+        console.log("Setting up tests ...");
+
+        const accountAddress="0xa48f2e0be8ab5a04a5eb1f86ead1923f03a207fd";
+        const accountKey="3867b6c26d09eda0a03e523f509e317d1656adc2f64b59f8b630c76144db0f17";
+
+        mocha.suite = mocha.suite.clone();
+        mocha.setup('bdd');
+        mocha.reporter(CustomReporter);
+
+        var contract_name="HelloWorld";
+        var ABI = require('../../ethereumjs-abi-0.6.5.min.js');
+        var Tx = require('../../ethereumjs-tx-1.3.3.min.js');
+        var ContractTesterLib = require("../projecteditor/contracttester-lib").default;
+        const utilityLibrary = new ContractTesterLib();
+
+        console.warn(typeof(testCode));
+        // TODO: FIXME: consider multiple occurrences
+        //              consider case (in)sensitive
+        //              consider single and double quotes
+        console.warn(title);
+        const regex = new RegExp("it*.\'" + title + "\'*.,{1}");
+        const replaceWith = 'it.only("' + title + '",';
+        const singleTestCode = testCode.replace(regex, replaceWith);
+        console.warn("single test code: ", singleTestCode);
+
+        describe("Contract name: " + contract_name, function() {
+            testRunnerStatus="";
+            try {
+                eval(singleTestCode);
+            } catch(e) {
+                testRunnerStatus="Invalid test file. " + e;
+                console.error("caught an error: ", testRunnerStatus);
+                componentReference.redraw(); // TODO: FIXME: debug force refresh here
+                return;
+            }
+
+        });
+
+        // Invoke Mocha
+        mocha.checkLeaks();
+        //mocha.allowUncaught();
+        mocha.fullTrace();
         mocha.run(function() {
             console.log("Tests are done!");
             componentReference.redraw(); // TODO: FIXME: debug force refresh here

@@ -23,7 +23,9 @@ import Web3 from 'web3';
 import * as ExternalTests from './contracttester-external';
 import MonacoEditor from 'react-monaco-editor';
 import TestRunner from "../testing/testrunner";
-import { readReportOutput, readReportSuccesses, readReportFailures } from "../testing/reporter";
+import {readTestRunnerStatus} from "../testing/testrunner";
+
+import { readReporterStatus, readReportOutput, readReportSuccesses, readReportFailures, readTotalTestCount, installComponentReferenceForDebugging } from "../testing/reporter";
 
 var testCode=`
     describe('User-created test block: manually check contract data', function (done) {
@@ -310,11 +312,50 @@ export default class ContractTester extends Component {
             } else if(debugData[i].title !== "") {
                 testOutputData.push(<span style="width:20px;display:inline-block"></span>);
                 testOutputData.push("* ");
+                testOutputData.push(" | ");
+                const state = debugData[i].state;
+                if(state === "passed") {
+                    testOutputData.push(<label style="color: lightgreen">OK</label>);
+                } else {
+                    testOutputData.push(<label style="color: red">FAIL</label>);
+                }
+                testOutputData.push(" | ");
                 testOutputData.push(debugData[i].title);
-                testOutputData.push(" | ");
-                testOutputData.push(debugData[i].state);
-                testOutputData.push(" | ");
+                testOutputData.push(" (");
                 testOutputData.push(debugData[i].duration + "ms");
+                testOutputData.push(")");
+// TODO: FIXME: hardcoded debugging
+if(i === 3) {
+        testOutputData.push(<button onClick={
+            () => {
+                { this.testRunner.runSingle(debugData[3].title, testCode, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+            }
+        }>
+        Rerun
+        </button>
+        );
+} else if(i === 4) {
+        testOutputData.push(<button onClick={
+            () => {
+                { this.testRunner.runSingle(debugData[4].title, testCode, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+            }
+        }>
+        Rerun
+        </button>
+        );
+} else if(i === 5) {
+        testOutputData.push(<button onClick={
+            () => {
+                { this.testRunner.runSingle(debugData[5].title, testCode, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+            }
+        }>
+        Rerun
+        </button>
+        );
+} else {
+    console.error(i);
+}
+
             } else {
                 console.error(debugData[i]);
             }
@@ -322,6 +363,11 @@ export default class ContractTester extends Component {
 
         var testSuccessData = readReportSuccesses();
         var testFailureData = readReportFailures();
+        var testTotalCount = testSuccessData + testFailureData;
+        var totalTestCount = readTotalTestCount();
+        installComponentReferenceForDebugging(this);
+        var testRunnerStatus = readTestRunnerStatus().toString();
+        var reporterStatus = readReporterStatus();
 
         const endpoint="http://superblocks-browser"; // TODO: support other networks
         const web3=this._getWeb3(endpoint);
@@ -346,11 +392,20 @@ export default class ContractTester extends Component {
                     Run all
                 </button>
                 <hr />
-                <label> [Test output] {testOutputData}</label>
+                <label> [Tests] Done {testTotalCount} of {totalTestCount} tests</label>
+                <br />
+                <br />
+                <label>HelloWorld.test.js {testOutputData}</label>
                 <hr />
+                <label> [Test Summary]</label>
                 <label> {testSuccessData} passed</label>
                 <label> {testFailureData} failed</label>
-                <label> {testSuccessData + testFailureData} total</label>
+                <label> {testTotalCount} total</label>
+                <hr />
+                <label> [Output console]</label>
+                <br />
+                <label style="color:red"> {testRunnerStatus} </label>
+                <label style="color:red"> {reporterStatus} </label>
             </div>
         );
 
