@@ -33,8 +33,18 @@ export default class TestRunner {
     constructor() {
     }
 
-    runAll(testCode, web3, componentReference, action_before, action_test, action_after) {
+    createAliases(contractsData) {
+        var contracts="";
+        for(var key in contractsData) {
+console.error(key.toString());
+            contracts+='var HelloWorld=contractsData["HelloWorld"];';
+        }
+        return contracts;
+    }
+
+    runAll(testCode, contractsData, accountAddress, accountKey, web3, componentReference, action_before, action_test, action_after) {
         console.log("Setting up tests ...");
+const contracts = this.createAliases(contractsData);
 
         // TODO: FIXME: consider enabling custom account selection;
         //              See also: contractinteraction.js
@@ -47,8 +57,6 @@ export default class TestRunner {
         else {
             accountAddress=accountAddress[0];
         }*/
-        const accountAddress="0xa48f2e0be8ab5a04a5eb1f86ead1923f03a207fd";
-        const accountKey="3867b6c26d09eda0a03e523f509e317d1656adc2f64b59f8b630c76144db0f17";
 
         //
         // Settings
@@ -109,7 +117,7 @@ export default class TestRunner {
         describe("Contract name: " + contract_name, function() {
             testRunnerStatus="";
             try {
-                eval(testCode);
+                eval(contracts + testCode);
             } catch(e) {
                 testRunnerStatus="Invalid test file. " + e;
                 console.error("testrunner error: ", e);
@@ -130,11 +138,9 @@ export default class TestRunner {
         return;
     };
 
-    runSingle(title, testCode, web3, componentReference, action_before, action_test, action_after) {
+    runSingle(title, testCode, contractsData, web3, accountAddress, accountKey, componentReference, action_before, action_test, action_after) {
         console.log("Setting up tests ...");
-
-        const accountAddress="0xa48f2e0be8ab5a04a5eb1f86ead1923f03a207fd";
-        const accountKey="3867b6c26d09eda0a03e523f509e317d1656adc2f64b59f8b630c76144db0f17";
+const contracts = this.createAliases(contractsData);
 
         mocha.suite = mocha.suite.clone();
         mocha.setup('bdd');
@@ -159,7 +165,7 @@ export default class TestRunner {
         describe("Contract name: " + contract_name, function() {
             testRunnerStatus="";
             try {
-                eval(singleTestCode);
+                eval(contracts + singleTestCode);
             } catch(e) {
                 testRunnerStatus="Invalid test file. " + e;
                 console.error("caught an error: ", testRunnerStatus);

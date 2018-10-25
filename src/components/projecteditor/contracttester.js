@@ -32,10 +32,9 @@ var testCode=`
         var contractInstance;
 
         beforeEach(function (done) {
-            // TODO: FIXME: access to compiler or pre-built data
-            const contractBin = "0x6060604052341561000f57600080fd5b6040516103c13803806103c1833981016040528080518201919050508060009080519060200190610041929190610048565b50506100ed565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061008957805160ff19168380011785556100b7565b828001600101855582156100b7579182015b828111156100b657825182559160200191906001019061009b565b5b5090506100c491906100c8565b5090565b6100ea91905b808211156100e65760008160009055506001016100ce565b5090565b90565b6102c5806100fc6000396000f30060606040526004361061004c576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680633d7403a314610051578063e21f37ce146100ae575b600080fd5b341561005c57600080fd5b6100ac600480803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190505061013c565b005b34156100b957600080fd5b6100c1610156565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156101015780820151818401526020810190506100e6565b50505050905090810190601f16801561012e5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b80600090805190602001906101529291906101f4565b5050565b60008054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156101ec5780601f106101c1576101008083540402835291602001916101ec565b820191906000526020600020905b8154815290600101906020018083116101cf57829003601f168201915b505050505081565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061023557805160ff1916838001178555610263565b82800160010185558215610263579182015b82811115610262578251825591602001919060010190610247565b5b5090506102709190610274565b5090565b61029691905b8082111561029257600081600090555060010161027a565b5090565b905600a165627a7a72305820bb261bb5858618e117ce6751ee971eccf221b3efade6c29d04b739a5e37335ab00290000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c48656c6c6f20576f726c64210000000000000000000000000000000000000000";
-            // TODO: FIXME: access to compiler or pre-built data
-            const contractABI = [{"constant":false,"inputs":[{"name":"newMessage","type":"string"}],"name":"update","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"message","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"initMessage","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}];
+            // TODO: FIXME: constructor parameters
+            const contractBin = HelloWorld.bin + "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c48656c6c6f20576f726c64210000000000000000000000000000000000000000";
+            const contractABI = HelloWorld.abi;
 
             var account_nonce=0;
             web3.eth.getTransactionCount(accountAddress, function(error, result) {
@@ -286,6 +285,31 @@ export default class ContractTester extends Component {
         return web3;
     };
 
+    _loadFiles=(files, cb)=>{
+        const bodies=[];
+        var fn;
+        fn=((files, bodies, cb2)=>{
+            if(files.length==0) {
+                cb2(0);
+                return;
+            }
+            const file=files.shift();
+            this.props.project.loadFile(file, (body) => {
+                if(body.status!=0) {
+                    cb(1);
+                    return;
+                }
+                bodies.push(body.contents);
+                fn(files, bodies, (status)=>{
+                    cb2(status);
+                });
+            }, true, true);
+        });
+        fn(files, bodies, (status)=>{
+            cb(status, bodies);
+        });
+    };
+
     _makeFileName=(path, tag, suffix)=>{
         const a = path.match(/^(.*\/)([^/]+)$/);
         const dir=a[1];
@@ -328,7 +352,7 @@ export default class ContractTester extends Component {
 if(i === 3) {
         testOutputData.push(<button onClick={
             () => {
-                { this.testRunner.runSingle(debugData[3].title, testCode, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+                { this.testRunner.runSingle(debugData[3].title, testCode, contractsData, accountAddress, accountKey, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
             }
         }>
         Rerun
@@ -337,7 +361,7 @@ if(i === 3) {
 } else if(i === 4) {
         testOutputData.push(<button onClick={
             () => {
-                { this.testRunner.runSingle(debugData[4].title, testCode, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+                { this.testRunner.runSingle(debugData[4].title, testCode, contractsData, accountAddress, accountKey, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
             }
         }>
         Rerun
@@ -346,7 +370,7 @@ if(i === 3) {
 } else if(i === 5) {
         testOutputData.push(<button onClick={
             () => {
-                { this.testRunner.runSingle(debugData[5].title, testCode, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+                { this.testRunner.runSingle(debugData[5].title, testCode, contractsData, accountAddress, accountKey, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
             }
         }>
         Rerun
@@ -369,8 +393,93 @@ if(i === 3) {
         var testRunnerStatus = readTestRunnerStatus().toString();
         var reporterStatus = readReporterStatus();
 
+        var availableContracts={};
+        var availableContractsData=[];
+        var availableContractNames=[];
+        var availableContractSources=[];
+        const contracts=this.dappfile.contracts();
+        for(var index=0;index<contracts.length;index++) {
+            const item = contracts[index];
+            availableContractNames.push(item.name);
+            availableContractSources.push(item.source);
+            availableContractsData.push(<br />);
+            availableContractsData.push(<span style="width:20px;display:inline-block"></span>);
+            availableContractsData.push("* ");
+
+            availableContractsData.push(item.name);
+        }
+
+        this._loadFiles(availableContractSources, (status, bodies) => {
+            // TODO: FIXME: error handling
+            //              check status
+            for(var index=0;index<contracts.length;index++) {
+                const name = availableContractNames[index];
+                const source = bodies[index];
+                availableContracts[name] = source;
+            }
+        });
+
+        // TODO: FIXME: move out of render context
+        // take network into account
+        // traverse all files
+
+        var mustCompileFirst="";
+        var contractsData={};
+        const contractName="HelloWorld";
+        contractsData[contractName]={};
+        const filename="/contracts/."+contractName+".sol";
+        const network="browser";
+        const filetypeABI="abi";
+        const filetypeBin="bin";
+        const fileABI=filename+"."+network+"."+filetypeABI;
+        const fileBin=filename+"."+network+"."+filetypeBin;
+        this.props.project.loadFile(fileABI, (abi) => {
+            if(abi.status!=0) {
+                mustCompileFirst="ABI file not found: " + fileABI + ". Compile " + contractName + " before testing.";
+                return;
+            }
+
+            this.props.project.loadFile(fileBin, (bin) => {
+                if(bin.status!=0) {
+                    mustCompileFirst="Binary file not found: " + fileBin + ". Compile " + contractName + " before testing.";
+                    return;
+                }
+
+                contractsData[contractName]={
+                    abi: JSON.parse(abi.contents),
+                    bin: bin.contents
+                };
+            });
+        });
+
+        const accountAddress="0xa48f2e0be8ab5a04a5eb1f86ead1923f03a207fd";
+        const accountKey="3867b6c26d09eda0a03e523f509e317d1656adc2f64b59f8b630c76144db0f17";
         const endpoint="http://superblocks-browser"; // TODO: support other networks
         const web3=this._getWeb3(endpoint);
+
+        const mustCompileFirstOutput=(
+            <div style="color: #fff" class="scrollable-y" id={ scrollableId }>
+                  <MonacoEditor
+                    key={this.id}
+                    height="500"
+                    language="js"
+                    theme="vs-dark"
+                    value={ readTestCode() }
+                    onChange={(value)=>storeTestCode(value)}
+                    options={ { selectOnLineNumbers: true } }
+                  />
+
+                <button onClick={
+                      () => {
+                          { this.testRunner.runAll(testCode, contractsData, accountAddress, accountKey, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+                    }
+                }>
+                    Run all
+                </button>
+                <hr />
+                <label style="color:red"> { mustCompileFirst } </label>
+            </div>
+        );
 
         const runTestsButton=(
             <div style="color: #fff" class="scrollable-y" id={ scrollableId }>
@@ -385,30 +494,43 @@ if(i === 3) {
                   />
 
                 <button onClick={
-                    () => {
-                        { this.testRunner.runAll(testCode, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
+                      () => {
+                          { this.testRunner.runAll(testCode, contractsData, accountAddress, accountKey, web3, this, user_action_before_test, user_action_test, user_action_after_test) }
                     }
                 }>
                     Run all
                 </button>
                 <hr />
-                <label> [Tests] Done {testTotalCount} of {totalTestCount} tests</label>
+                <label><b>endpoint:</b> {endpoint} | <b>network:</b> {network}</label>
+                <br />
+                <label><b>accountAddress:</b> {accountAddress} </label>
                 <br />
                 <br />
-                <label>HelloWorld.test.js {testOutputData}</label>
+                <label><b>At disposal:</b> {availableContractsData}</label>
+                <br />
+                <br />
+
+                <label> <b>[Tests]</b> Done {testTotalCount} of {totalTestCount} tests</label>
+                <br />
+                <br />
+                <label><i>HelloWorld.test.js</i> {testOutputData}</label>
                 <hr />
-                <label> [Test Summary]</label>
+                <label> <b>[Test Summary]</b></label>
                 <label> {testSuccessData} passed</label>
                 <label> {testFailureData} failed</label>
                 <label> {testTotalCount} total</label>
                 <hr />
-                <label> [Output console]</label>
+                <label> <b>[Output console]</b></label>
                 <br />
                 <label style="color:red"> {testRunnerStatus} </label>
                 <label style="color:red"> {reporterStatus} </label>
             </div>
         );
 
-        return runTestsButton;
+        if(mustCompileFirst !== "") {
+            return mustCompileFirstOutput;
+        } else {
+            return runTestsButton;
+        }
     }
 }
